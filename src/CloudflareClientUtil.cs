@@ -41,8 +41,8 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
         _client.Dispose();
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        await _client.DisposeAsync();
+        return _client.DisposeAsync();
     }
 }
