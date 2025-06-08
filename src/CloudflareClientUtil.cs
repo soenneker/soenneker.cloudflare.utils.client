@@ -6,6 +6,7 @@ using Soenneker.Cloudflare.OpenApiClient;
 using Soenneker.Cloudflare.Utils.Client.Abstract;
 using Soenneker.Extensions.Configuration;
 using Soenneker.Extensions.ValueTask;
+using Soenneker.HttpClients.LoggingHandler;
 using Soenneker.Kiota.BearerAuthenticationProvider;
 using Soenneker.Utils.AsyncSingleton;
 using System.Threading;
@@ -22,9 +23,22 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
     {
         _client = new AsyncSingleton<CloudflareOpenApiClient>(async (token, _) =>
         {
-            System.Net.Http.HttpClient client = await httpClientUtil.Get(token).NoSync();
+            System.Net.Http.HttpClient client;
 
             var apiKey = configuration.GetValueStrict<string>("Cloudflare:ApiKey");
+
+            var logging = configuration.GetValue<bool>("Cloudflare:RequestResponseLogging");
+
+            if (logging)
+            {
+                var handler = new HttpClientLoggingHandler(logger, new HttpClientLoggingOptions {LogBodies = true, LogLevel = LogLevel.Debug});
+
+                client = new System.Net.Http.HttpClient(handler);
+            }
+            else
+            {
+                client = await httpClientUtil.Get(token).NoSync();
+            }
 
             var requestAdapter = new HttpClientRequestAdapter(new BearerAuthenticationProvider(apiKey), httpClient: client);
 
@@ -47,4 +61,3 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
         return _client.DisposeAsync();
     }
 }
-
