@@ -9,6 +9,7 @@ using Soenneker.Extensions.ValueTask;
 using Soenneker.HttpClients.LoggingHandler;
 using Soenneker.Kiota.BearerAuthenticationProvider;
 using Soenneker.Utils.AsyncSingleton;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,28 +20,34 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
 {
     private readonly AsyncSingleton<CloudflareOpenApiClient> _client;
 
+    private System.Net.Http.HttpClient? _httpClient;
+
     public CloudflareClientUtil(ICloudflareHttpClient httpClientUtil, IConfiguration configuration, ILogger<CloudflareClientUtil> logger)
     {
         _client = new AsyncSingleton<CloudflareOpenApiClient>(async (token, _) =>
         {
-            System.Net.Http.HttpClient client;
-
             var apiKey = configuration.GetValueStrict<string>("Cloudflare:ApiKey");
 
             var logging = configuration.GetValue<bool>("Cloudflare:RequestResponseLogging");
 
             if (logging)
             {
-                var handler = new HttpClientLoggingHandler(logger, new HttpClientLoggingOptions {LogBodies = true, LogLevel = LogLevel.Debug});
+                var loggingHandler = new HttpClientLoggingHandler(logger, new HttpClientLoggingOptions
+                {
+                    LogBodies = true,
+                    LogLevel = LogLevel.Debug
+                });
 
-                client = new System.Net.Http.HttpClient(handler);
+                loggingHandler.InnerHandler = new HttpClientHandler();
+
+                _httpClient = new System.Net.Http.HttpClient(loggingHandler);
             }
             else
             {
-                client = await httpClientUtil.Get(token).NoSync();
+                _httpClient = await httpClientUtil.Get(token).NoSync();
             }
 
-            var requestAdapter = new HttpClientRequestAdapter(new BearerAuthenticationProvider(apiKey), httpClient: client);
+            var requestAdapter = new HttpClientRequestAdapter(new BearerAuthenticationProvider(apiKey), httpClient: _httpClient);
 
             return new CloudflareOpenApiClient(requestAdapter);
         });
@@ -53,11 +60,15 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
 
     public void Dispose()
     {
+        _httpClient?.Dispose();
+
         _client.Dispose();
     }
 
     public ValueTask DisposeAsync()
     {
+        _httpClient?.Dispose();
+
         return _client.DisposeAsync();
     }
 }
