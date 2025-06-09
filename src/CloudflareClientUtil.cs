@@ -34,7 +34,6 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
             {
                 var loggingHandler = new HttpClientLoggingHandler(logger, new HttpClientLoggingOptions
                 {
-                    LogBodies = true,
                     LogLevel = LogLevel.Debug
                 });
 
