@@ -24,7 +24,7 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
 
     public CloudflareClientUtil(ICloudflareHttpClient httpClientUtil, IConfiguration configuration, ILogger<CloudflareClientUtil> logger)
     {
-        _client = new AsyncSingleton<CloudflareOpenApiClient>(async (token, _) =>
+        _client = new AsyncSingleton<CloudflareOpenApiClient>(async token =>
         {
             var apiKey = configuration.GetValueStrict<string>("Cloudflare:ApiKey");
 
