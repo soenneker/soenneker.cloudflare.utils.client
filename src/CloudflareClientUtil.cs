@@ -34,10 +34,10 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil, IDisposable, I
         _logger = logger;
 
         // Method group => no closure allocation
-        _client = new AsyncSingleton<CloudflareOpenApiClient>(CreateClientAsync);
+        _client = new AsyncSingleton<CloudflareOpenApiClient>(CreateClient);
     }
 
-    private async ValueTask<CloudflareOpenApiClient> CreateClientAsync(CancellationToken token)
+    private async ValueTask<CloudflareOpenApiClient> CreateClient(CancellationToken token)
     {
         var apiKey = _configuration.GetValueStrict<string>("Cloudflare:ApiKey");
         var logging = _configuration.GetValue<bool>("Cloudflare:RequestResponseLogging");
