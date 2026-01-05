@@ -9,7 +9,6 @@ using Soenneker.Extensions.ValueTask;
 using Soenneker.HttpClients.LoggingHandler;
 using Soenneker.Kiota.BearerAuthenticationProvider;
 using Soenneker.Utils.AsyncSingleton;
-using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +16,7 @@ using System.Threading.Tasks;
 namespace Soenneker.Cloudflare.Utils.Client;
 
 /// <inheritdoc cref="ICloudflareClientUtil"/>
-public sealed class CloudflareClientUtil : ICloudflareClientUtil, IDisposable, IAsyncDisposable
+public sealed class CloudflareClientUtil : ICloudflareClientUtil
 {
     private readonly AsyncSingleton<CloudflareOpenApiClient> _client;
 
