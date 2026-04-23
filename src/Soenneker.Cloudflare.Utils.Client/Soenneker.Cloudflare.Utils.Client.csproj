@@ -44,10 +44,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Soenneker.HttpClients.LoggingHandler" Version="4.0.149" />
+        <PackageReference Include="Soenneker.HttpClients.LoggingHandler" Version="4.0.152" />
         <PackageReference Include="Soenneker.Kiota.BearerAuthenticationProvider" Version="4.0.36" />
-        <PackageReference Include="Soenneker.Cloudflare.HttpClient" Version="4.0.278" />
+        <PackageReference Include="Soenneker.Cloudflare.HttpClient" Version="4.0.282" />
         <PackageReference Include="Soenneker.Cloudflare.OpenApiClient" Version="4.0.553" />
-        <PackageReference Include="Soenneker.Utils.AsyncSingleton" Version="4.0.783" />
+        <PackageReference Include="Soenneker.Utils.AsyncSingleton" Version="4.0.785" />
     </ItemGroup>
 </Project>
