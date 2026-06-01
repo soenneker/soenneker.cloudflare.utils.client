@@ -63,7 +63,7 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
         }
         else
         {
-            httpClient = await _httpClientUtil.Get(token)
+            httpClient = await _httpClientUtil.Get(apiKey, token)
                                               .NoSync();
         }
 
