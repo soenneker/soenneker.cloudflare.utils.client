@@ -8,7 +8,8 @@ using Soenneker.Extensions.Configuration;
 using Soenneker.Extensions.ValueTask;
 using Soenneker.HttpClients.LoggingHandler;
 using Soenneker.Kiota.BearerAuthenticationProvider;
-using Soenneker.Utils.AsyncSingleton;
+using Soenneker.Dictionaries.Singletons;
+using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,13 +19,13 @@ namespace Soenneker.Cloudflare.Utils.Client;
 /// <inheritdoc cref="ICloudflareClientUtil"/>
 public sealed class CloudflareClientUtil : ICloudflareClientUtil
 {
-    private readonly AsyncSingleton<CloudflareOpenApiClient> _client;
+    private readonly SingletonDictionary<CloudflareOpenApiClient> _clients;
 
     private readonly ICloudflareHttpClient _httpClientUtil;
     private readonly IConfiguration _configuration;
     private readonly ILogger<CloudflareClientUtil> _logger;
 
-    private System.Net.Http.HttpClient? _httpClient;
+    private readonly SingletonDictionary<System.Net.Http.HttpClient> _loggingHttpClients;
 
     public CloudflareClientUtil(ICloudflareHttpClient httpClientUtil, IConfiguration configuration, ILogger<CloudflareClientUtil> logger)
     {
@@ -33,48 +34,103 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
         _logger = logger;
 
         // Method group => no closure allocation
-        _client = new AsyncSingleton<CloudflareOpenApiClient>(CreateClient);
+        _clients = new SingletonDictionary<CloudflareOpenApiClient>(CreateClient);
+        _loggingHttpClients = new SingletonDictionary<System.Net.Http.HttpClient>(CreateLoggingHttpClient);
     }
 
-    private async ValueTask<CloudflareOpenApiClient> CreateClient(CancellationToken token)
+    private System.Net.Http.HttpClient CreateLoggingHttpClient(string _)
     {
-        var apiKey = _configuration.GetValueStrict<string>("Cloudflare:ApiKey");
+        var loggingHandler = new HttpClientLoggingHandler(_logger, new HttpClientLoggingOptions
+        {
+            LogLevel = LogLevel.Debug
+        })
+        {
+            InnerHandler = new HttpClientHandler()
+        };
+
+        return new System.Net.Http.HttpClient(loggingHandler);
+    }
+
+    private async ValueTask<CloudflareOpenApiClient> CreateClient(string apiKey, CancellationToken token)
+    {
         var logging = _configuration.GetValue<bool>("Cloudflare:RequestResponseLogging");
+        System.Net.Http.HttpClient httpClient;
 
         if (logging)
         {
-            var loggingHandler = new HttpClientLoggingHandler(_logger, new HttpClientLoggingOptions
-            {
-                LogLevel = LogLevel.Debug
-            })
-            {
-                InnerHandler = new HttpClientHandler()
-            };
-
-            _httpClient = new System.Net.Http.HttpClient(loggingHandler);
+            httpClient = await _loggingHttpClients.Get(apiKey, token)
+                                                   .NoSync();
         }
         else
         {
-            _httpClient = await _httpClientUtil.Get(token)
-                                               .NoSync();
+            httpClient = await _httpClientUtil.Get(token)
+                                              .NoSync();
         }
 
-        var requestAdapter = new HttpClientRequestAdapter(new BearerAuthenticationProvider(apiKey), httpClient: _httpClient);
+        var requestAdapter = new HttpClientRequestAdapter(new BearerAuthenticationProvider(apiKey), httpClient: httpClient);
 
         return new CloudflareOpenApiClient(requestAdapter);
     }
 
-    public ValueTask<CloudflareOpenApiClient> Get(CancellationToken cancellationToken = default) => _client.Get(cancellationToken);
+    public ValueTask<CloudflareOpenApiClient> Get(CancellationToken cancellationToken = default)
+    {
+        var apiKey = _configuration.GetValueStrict<string>("Cloudflare:ApiKey");
+        return Get(apiKey, cancellationToken);
+    }
+
+    public ValueTask<CloudflareOpenApiClient> Get(string apiKey, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
+
+        return _clients.Get(apiKey, cancellationToken);
+    }
+
+    public ValueTask<bool> Remove(CancellationToken cancellationToken = default)
+    {
+        var apiKey = _configuration.GetValueStrict<string>("Cloudflare:ApiKey");
+        return Remove(apiKey, cancellationToken);
+    }
+
+    public async ValueTask<bool> Remove(string apiKey, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
+
+        bool removed = await _clients.Remove(apiKey, cancellationToken)
+                                     .NoSync();
+
+        await _loggingHttpClients.Remove(apiKey, cancellationToken)
+                                 .NoSync();
+
+        return removed;
+    }
+
+    public bool RemoveSync(CancellationToken cancellationToken = default)
+    {
+        var apiKey = _configuration.GetValueStrict<string>("Cloudflare:ApiKey");
+        return RemoveSync(apiKey, cancellationToken);
+    }
+
+    public bool RemoveSync(string apiKey, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
+
+        bool removed = _clients.RemoveSync(apiKey, cancellationToken);
+        _loggingHttpClients.RemoveSync(apiKey, cancellationToken);
+        return removed;
+    }
 
     public void Dispose()
     {
-        _httpClient?.Dispose();
-        _client.Dispose();
+        _loggingHttpClients.Dispose();
+        _clients.Dispose();
     }
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        _httpClient?.Dispose();
-        return _client.DisposeAsync();
+        await _loggingHttpClients.DisposeAsync()
+                                 .NoSync();
+
+        await _clients.DisposeAsync()
+                      .NoSync();
     }
 }
