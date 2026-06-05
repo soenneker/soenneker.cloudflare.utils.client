@@ -119,12 +119,19 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
         return removed;
     }
 
+    /// <summary>
+    /// Releases resources used by the current instance.
+    /// </summary>
     public void Dispose()
     {
         _loggingHttpClients.Dispose();
         _clients.Dispose();
     }
 
+    /// <summary>
+    /// Asynchronously releases resources used by the current instance.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public async ValueTask DisposeAsync()
     {
         await _loggingHttpClients.DisposeAsync()

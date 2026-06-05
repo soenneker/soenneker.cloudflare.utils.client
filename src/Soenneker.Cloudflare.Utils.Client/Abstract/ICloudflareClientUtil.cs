@@ -40,7 +40,18 @@ public interface ICloudflareClientUtil : IAsyncDisposable, IDisposable
     /// <returns><see langword="true"/> if a cached client was removed</returns>
     ValueTask<bool> Remove(string apiKey, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Removes sync.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A value indicating whether the operation succeeded.</returns>
     bool RemoveSync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Removes sync.
+    /// </summary>
+    /// <param name="apiKey">The API key.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A value indicating whether the operation succeeded.</returns>
     bool RemoveSync(string apiKey, CancellationToken cancellationToken = default);
 }
