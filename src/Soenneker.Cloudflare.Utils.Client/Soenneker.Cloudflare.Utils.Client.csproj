@@ -46,7 +46,7 @@
     <ItemGroup>
         <PackageReference Include="Soenneker.HttpClients.LoggingHandler" Version="4.0.195" />
         <PackageReference Include="Soenneker.Kiota.BearerAuthenticationProvider" Version="4.0.44" />
-        <PackageReference Include="Soenneker.Cloudflare.HttpClient" Version="4.0.359" />
+        <PackageReference Include="Soenneker.Cloudflare.HttpClient" Version="4.0.361" />
         <PackageReference Include="Soenneker.Cloudflare.OpenApiClient" Version="4.0.564" />
 </ItemGroup>
 </Project>
