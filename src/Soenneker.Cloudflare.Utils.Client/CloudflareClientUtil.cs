@@ -1,16 +1,13 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.Kiota.Http.HttpClientLibrary;
 using Soenneker.Cloudflare.HttpClient.Abstract;
 using Soenneker.Cloudflare.OpenApiClient;
 using Soenneker.Cloudflare.Utils.Client.Abstract;
 using Soenneker.Extensions.Configuration;
 using Soenneker.Extensions.ValueTask;
-using Soenneker.HttpClients.LoggingHandler;
 using Soenneker.Kiota.BearerAuthenticationProvider;
 using Soenneker.Dictionaries.Singletons;
 using System;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,49 +20,19 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
 
     private readonly ICloudflareHttpClient _httpClientUtil;
     private readonly IConfiguration _configuration;
-    private readonly ILogger<CloudflareClientUtil> _logger;
 
-    private readonly SingletonDictionary<System.Net.Http.HttpClient> _loggingHttpClients;
-
-    public CloudflareClientUtil(ICloudflareHttpClient httpClientUtil, IConfiguration configuration, ILogger<CloudflareClientUtil> logger)
+    public CloudflareClientUtil(ICloudflareHttpClient httpClientUtil, IConfiguration configuration)
     {
         _httpClientUtil = httpClientUtil;
         _configuration = configuration;
-        _logger = logger;
-
         // Method group => no closure allocation
         _clients = new SingletonDictionary<CloudflareOpenApiClient>(CreateClient);
-        _loggingHttpClients = new SingletonDictionary<System.Net.Http.HttpClient>(CreateLoggingHttpClient);
-    }
-
-    private System.Net.Http.HttpClient CreateLoggingHttpClient(string _)
-    {
-        var loggingHandler = new HttpClientLoggingHandler(_logger, new HttpClientLoggingOptions
-        {
-            LogLevel = LogLevel.Debug
-        })
-        {
-            InnerHandler = new HttpClientHandler()
-        };
-
-        return new System.Net.Http.HttpClient(loggingHandler);
     }
 
     private async ValueTask<CloudflareOpenApiClient> CreateClient(string apiKey, CancellationToken token)
     {
-        var logging = _configuration.GetValue<bool>("Cloudflare:RequestResponseLogging");
-        System.Net.Http.HttpClient httpClient;
-
-        if (logging)
-        {
-            httpClient = await _loggingHttpClients.Get(apiKey, token)
-                                                   .NoSync();
-        }
-        else
-        {
-            httpClient = await _httpClientUtil.Get(apiKey, token)
-                                              .NoSync();
-        }
+        System.Net.Http.HttpClient httpClient = await _httpClientUtil.Get(apiKey, token)
+                                                                     .NoSync();
 
         var requestAdapter = new HttpClientRequestAdapter(new BearerAuthenticationProvider(apiKey), httpClient: httpClient);
 
@@ -98,9 +65,6 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
         bool removed = await _clients.Remove(apiKey, cancellationToken)
                                      .NoSync();
 
-        await _loggingHttpClients.Remove(apiKey, cancellationToken)
-                                 .NoSync();
-
         return removed;
     }
 
@@ -115,7 +79,6 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
 
         bool removed = _clients.RemoveSync(apiKey, cancellationToken);
-        _loggingHttpClients.RemoveSync(apiKey, cancellationToken);
         return removed;
     }
 
@@ -124,7 +87,6 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
     /// </summary>
     public void Dispose()
     {
-        _loggingHttpClients.Dispose();
         _clients.Dispose();
     }
 
@@ -134,9 +96,6 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
     /// <returns>A task that represents the asynchronous operation.</returns>
     public async ValueTask DisposeAsync()
     {
-        await _loggingHttpClients.DisposeAsync()
-                                 .NoSync();
-
         await _clients.DisposeAsync()
                       .NoSync();
     }
