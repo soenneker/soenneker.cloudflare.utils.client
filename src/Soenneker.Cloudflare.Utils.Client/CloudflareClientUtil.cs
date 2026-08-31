@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 
 namespace Soenneker.Cloudflare.Utils.Client;
 
-/// <inheritdoc cref="ICloudflareClientUtil"/>
 public sealed class CloudflareClientUtil : ICloudflareClientUtil
 {
     private readonly SingletonDictionary<CloudflareOpenApiClient> _clients;
@@ -62,10 +61,16 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
 
-        bool removed = await _clients.Remove(apiKey, cancellationToken)
-                                     .NoSync();
-
-        return removed;
+        try
+        {
+            return await _clients.Remove(apiKey, cancellationToken)
+                                 .NoSync();
+        }
+        finally
+        {
+            await _httpClientUtil.Remove(apiKey, cancellationToken)
+                                 .NoSync();
+        }
     }
 
     public bool RemoveSync(CancellationToken cancellationToken = default)
@@ -78,22 +83,21 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
 
-        bool removed = _clients.RemoveSync(apiKey, cancellationToken);
-        return removed;
+        try
+        {
+            return _clients.RemoveSync(apiKey, cancellationToken);
+        }
+        finally
+        {
+            _httpClientUtil.RemoveSync(apiKey, cancellationToken);
+        }
     }
 
-    /// <summary>
-    /// Releases resources used by the current instance.
-    /// </summary>
     public void Dispose()
     {
         _clients.Dispose();
     }
 
-    /// <summary>
-    /// Asynchronously releases resources used by the current instance.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous operation.</returns>
     public async ValueTask DisposeAsync()
     {
         await _clients.DisposeAsync()

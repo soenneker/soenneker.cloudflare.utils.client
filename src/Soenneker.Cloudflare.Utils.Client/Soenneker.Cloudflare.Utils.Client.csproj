@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Description>An async thread-safe singleton for the Cloudflare OpenApiClient</Description>
+        <Description>Thread-safe caching and configuration for generated Cloudflare OpenAPI clients.</Description>
         <Version Condition="'$(BUILD_VERSION)' == ''">4.0.0</Version>
         <Version Condition="'$(BUILD_VERSION)' != ''">$(BUILD_VERSION)</Version>
         <AssemblyName>Soenneker.Cloudflare.Utils.Client</AssemblyName>
@@ -45,7 +45,7 @@
 
     <ItemGroup>
         <PackageReference Include="Soenneker.Kiota.BearerAuthenticationProvider" Version="4.0.46" />
-        <PackageReference Include="Soenneker.Cloudflare.HttpClient" Version="4.0.394" />
+        <PackageReference Include="Soenneker.Cloudflare.HttpClient" Version="4.0.398" />
         <PackageReference Include="Soenneker.Cloudflare.OpenApiClient" Version="4.0.564" />
 </ItemGroup>
 </Project>
