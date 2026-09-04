@@ -15,6 +15,8 @@ namespace Soenneker.Cloudflare.Utils.Client;
 
 public sealed class CloudflareClientUtil : ICloudflareClientUtil
 {
+    private const string ApiHost = "api.cloudflare.com";
+
     private readonly SingletonDictionary<CloudflareOpenApiClient> _clients;
 
     private readonly ICloudflareHttpClient _httpClientUtil;
@@ -33,7 +35,7 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
         System.Net.Http.HttpClient httpClient = await _httpClientUtil.Get(apiKey, token)
                                                                      .NoSync();
 
-        var requestAdapter = new HttpClientRequestAdapter(new BearerAuthenticationProvider(apiKey), httpClient: httpClient);
+        var requestAdapter = new HttpClientRequestAdapter(new BearerAuthenticationProvider(apiKey, ApiHost), httpClient: httpClient);
 
         return new CloudflareOpenApiClient(requestAdapter);
     }
