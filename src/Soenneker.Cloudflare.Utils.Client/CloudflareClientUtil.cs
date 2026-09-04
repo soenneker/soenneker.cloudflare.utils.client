@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace Soenneker.Cloudflare.Utils.Client;
 
+/// <inheritdoc cref="ICloudflareClientUtil" />
 public sealed class CloudflareClientUtil : ICloudflareClientUtil
 {
     private const string ApiHost = "api.cloudflare.com";
