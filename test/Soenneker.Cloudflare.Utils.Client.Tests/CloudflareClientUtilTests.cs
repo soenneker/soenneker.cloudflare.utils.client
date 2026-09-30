@@ -16,7 +16,7 @@ public class CloudflareClientUtilTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Get_WithSameApiKey_ReturnsCachedClient(CancellationToken cancellationToken)
+    public async ValueTask Get_WithSameApiKey_ReturnsCachedClient(CancellationToken cancellationToken)
     {
         const string apiKey = "test-api-key";
 
