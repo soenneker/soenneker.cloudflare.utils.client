@@ -43,7 +43,7 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
 
     public ValueTask<CloudflareOpenApiClient> Get(CancellationToken cancellationToken = default)
     {
-        var apiKey = _configuration.GetValueStrict<string>("Cloudflare:ApiKey");
+        var apiKey = _configuration.GetStringStrict("Cloudflare:ApiKey");
         return Get(apiKey, cancellationToken);
     }
 
@@ -56,7 +56,7 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
 
     public ValueTask<bool> Remove(CancellationToken cancellationToken = default)
     {
-        var apiKey = _configuration.GetValueStrict<string>("Cloudflare:ApiKey");
+        var apiKey = _configuration.GetStringStrict("Cloudflare:ApiKey");
         return Remove(apiKey, cancellationToken);
     }
 
@@ -78,7 +78,7 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
 
     public bool RemoveSync(CancellationToken cancellationToken = default)
     {
-        var apiKey = _configuration.GetValueStrict<string>("Cloudflare:ApiKey");
+        var apiKey = _configuration.GetStringStrict("Cloudflare:ApiKey");
         return RemoveSync(apiKey, cancellationToken);
     }
 
