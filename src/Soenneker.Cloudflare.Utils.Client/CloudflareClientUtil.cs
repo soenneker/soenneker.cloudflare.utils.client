@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Kiota.Http.HttpClientLibrary;
+using Microsoft.Kiota.Abstractions;
 using Soenneker.Cloudflare.HttpClient.Abstract;
 using Soenneker.Cloudflare.OpenApiClient;
 using Soenneker.Cloudflare.Utils.Client.Abstract;
@@ -38,7 +39,7 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
 
         var requestAdapter = new HttpClientRequestAdapter(new BearerAuthenticationProvider(apiKey, ApiHost), httpClient: httpClient);
 
-        return new CloudflareOpenApiClient(requestAdapter);
+        return new CloudflareClient(requestAdapter);
     }
 
     public ValueTask<CloudflareOpenApiClient> Get(CancellationToken cancellationToken = default)
@@ -52,6 +53,18 @@ public sealed class CloudflareClientUtil : ICloudflareClientUtil
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
 
         return _clients.Get(apiKey, cancellationToken);
+    }
+
+    public async ValueTask<IRequestAdapter> GetRequestAdapter(CancellationToken cancellationToken = default)
+    {
+        var client = (CloudflareClient)await Get(cancellationToken).NoSync();
+        return client.Adapter;
+    }
+
+    public async ValueTask<IRequestAdapter> GetRequestAdapter(string apiKey, CancellationToken cancellationToken = default)
+    {
+        var client = (CloudflareClient)await Get(apiKey, cancellationToken).NoSync();
+        return client.Adapter;
     }
 
     public ValueTask<bool> Remove(CancellationToken cancellationToken = default)

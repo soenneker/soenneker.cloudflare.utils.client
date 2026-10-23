@@ -1,5 +1,6 @@
 ﻿using Soenneker.Cloudflare.OpenApiClient;
 using System;
+using Microsoft.Kiota.Abstractions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,6 +25,23 @@ public interface ICloudflareClientUtil : IAsyncDisposable, IDisposable
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A configured Cloudflare OpenAPI client</returns>
     ValueTask<CloudflareOpenApiClient> Get(string apiKey, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the cached client's authenticated request adapter for responses the generated client cannot represent.
+    /// The adapter shares the client's request/response logging and lifetime and must not be disposed by callers.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The configured client's request adapter.</returns>
+    ValueTask<IRequestAdapter> GetRequestAdapter(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the cached client's authenticated request adapter for a specific API token.
+    /// The adapter shares the client's request/response logging and lifetime and must not be disposed by callers.
+    /// </summary>
+    /// <param name="apiKey">The Cloudflare API token.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The token-specific client's request adapter.</returns>
+    ValueTask<IRequestAdapter> GetRequestAdapter(string apiKey, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Removes and disposes the configured Cloudflare OpenAPI client instance.
